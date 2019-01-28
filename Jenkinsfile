@@ -123,6 +123,36 @@ pipeline {
             }
         }
 
+        stage('Create Index: Dev'){
+            agent { label 'deploy.jenkins.slave' }
+            when {
+                branch "master"
+                // evaluate the when condition before entering this stage's agent, if any
+                beforeAgent true
+            }
+            environment{
+                DEPLOY_TO = 'dev'
+                USER = 'harria1'
+                // USER = 'sbr-dev-ci'
+                COLLECTION= 'unit'
+                INDEX_NAME = "br_dev_${COLLECTION}_index"
+                DROP_INDEX = 'true'
+            }
+            steps {
+                unstash name: 'Generated'
+                createIndex()
+                milestone label: 'post create-index:dev', ordinal: 3
+            }
+            post {
+                success {
+                    colourText("info","Stage: ${env.STAGE_NAME} successful!")
+                }
+                failure {
+                    colourText("warn","Stage: ${env.STAGE_NAME} failed!")
+                }
+            }
+        }
+
         stage('Populate Schema: Dev'){
             agent { label 'deploy.jenkins.slave' }
             when {
@@ -135,12 +165,12 @@ pipeline {
                 USER = 'harria1'
                 // USER = 'br-dev-ci'
                 NAMESPACE = 'br_dev_db'
-                HDFS_DIR = '/user/${USER}/br/hbase'
+                HDFS_DIR = "/user/${USER}/br/hbase"
             }
             steps {
                 unstash name: 'Generated'
                 populateSchema()
-                milestone label: 'post populate-schema:dev', ordinal: 3
+                milestone label: 'post populate-schema:dev', ordinal: 4
             }
             post {
                 success {
@@ -190,6 +220,26 @@ def createSchema() {
                         kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
                         bash create_schema.sh -n ${NAMESPACE} -d ${DROP_TABLES}
 CREATE_SCHEMA
+            '''
+        }
+    }
+}
+
+def createIndex() {
+    echo "Deploying to $DEPLOY_TO"
+    sshagent(credentials: ["br-$DEPLOY_TO-ci-ssh-key"]) {
+        withCredentials([string(credentialsId: "dev-edgenode-1", variable: 'EDGE_NODE'),
+                         string(credentialsId: "dev-zookeeper-ensemble", variable: 'ZK_ENSEMBLE')]) {
+            sh '''
+                scp -q -o StrictHostKeyChecking=no src/main/resources/solr/create_index.sh ${USER}@${EDGE_NODE}:create_index.sh
+                echo "Successfully copied create_schema.sh to HOME directory on ${EDGE_NODE}"
+                scp -r -q -o StrictHostKeyChecking=no src/main/resources/solr/collection/${COLLECTION} ${USER}@${EDGE_NODE}:${COLLECTION}/
+                echo "Successfully copied '${COLLECTION}' index config files to HOME directory on ${EDGE_NODE}"
+                ssh -o StrictHostKeyChecking=no ${USER}@${EDGE_NODE} /bin/bash << CREATE_INDEX
+                        chmod +x create_index.sh
+                        kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
+                        bash create_index.sh -z ${ZK_ENSEMBLE} -n ${INDEX_NAME} -f ${COLLECTION}/config/schema.xml -d ${DROP_INDEX}
+CREATE_INDEX
             '''
         }
     }
