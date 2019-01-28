@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="indexer" type="indexerType"/>
+  <xs:complexType name="indexerType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="table_name" />
+      <xs:element type="xs:string" name="unit_id" />
+      <xs:element type="xs:string" name="parent_unit_id" minOccurs="0"/>
+      <xs:element type="xs:string" name="idbr_id" minOccurs="0"/>
+      <xs:element type="fieldType" name="field" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>Specific unit type fields</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="fieldType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="solr_field" />
+        <xs:attribute type="xs:string" name="hbase_column"/>
+        <xs:attribute type="xs:string" name="type"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>

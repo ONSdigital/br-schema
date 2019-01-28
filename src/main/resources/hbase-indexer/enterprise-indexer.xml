@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml-stylesheet type="text/xsl" href="row-mapping-hbase-indexer.xsl"?>
+
+<indexer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="indexer-config.xsd">
+
+    <table_name>ENTERPRISE</table_name>
+    <unit_id>ern</unit_id>
+    <idbr_id>entref</idbr_id>
+
+    <!-- Specific unit type fields -->
+    <field solr_field="entfield" hbase_column="sic" type="string" vbb="h"/>
+    <hbhb></hbhb>
+
+</indexer>
