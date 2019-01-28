@@ -103,8 +103,7 @@ pipeline {
             }
             environment{
                 DEPLOY_TO = 'dev'
-                USER = 'harria1'
-                // USER = 'br-dev-ci'
+                USER = 'sbr-dev-ci'
                 NAMESPACE = 'br_dev_db'
                 DROP_TABLES = 'true'
             }
@@ -132,8 +131,7 @@ pipeline {
             }
             environment{
                 DEPLOY_TO = 'dev'
-                USER = 'harria1'
-                // USER = 'sbr-dev-ci'
+                USER = 'sbr-dev-ci'
                 COLLECTION= 'unit'
                 INDEX_NAME = "br_dev_${COLLECTION}_index"
                 DROP_INDEX = 'true'
@@ -162,8 +160,7 @@ pipeline {
             }
             environment{
                 DEPLOY_TO = 'dev'
-                USER = 'harria1'
-                // USER = 'br-dev-ci'
+                USER = 'sbr-dev-ci'
                 NAMESPACE = 'br_dev_db'
                 HDFS_DIR = "/user/${USER}/br/hbase"
             }
