@@ -162,7 +162,9 @@ pipeline {
                 DEPLOY_TO = 'dev'
                 USER = 'sbr-dev-ci'
                 NAMESPACE = 'br_dev_db'
-                HDFS_DIR = "/user/${USER}/br/hbase"
+                TEST_DATA_DIR = 'test-data'
+                BR_ROOT_DIR = 'br'
+                HDFS_DIR = "${BR_ROOT_DIR}/hbase"
             }
             steps {
                 unstash name: 'Generated'
@@ -249,14 +251,15 @@ def populateSchema() {
                     sh '''
                 scp -q -o StrictHostKeyChecking=no src/main/resources/hbase/populate_schema.sh ${USER}@${EDGE_NODE}:populate_schema.sh
                 echo "Successfully copied populate_schema.sh to HOME directory on ${EDGE_NODE}"
-                scp -r -q -o StrictHostKeyChecking=no test-data/src/main/resources/data/ ${USER}@${EDGE_NODE}:test-data/
+                scp -r -q -o StrictHostKeyChecking=no test-data/src/main/resources/data/ ${USER}@${EDGE_NODE}:${TEST_DATA_DIR}/
                 echo "Successfully copied test data files to HOME directory on ${EDGE_NODE}"
                 ssh -o StrictHostKeyChecking=no ${USER}@${EDGE_NODE} /bin/bash << POPULATE_SCHEMA
                         chmod +x populate_schema.sh
                         kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
+                        hadoop fs -mkdir ${BR_ROOT_DIR}
                         hadoop fs -mkdir ${HDFS_DIR}
-                        hadoop fs -copyFromLocal -f test-data ${HDFS_DIR}
-                        bash populate_schema.sh ${NAMESPACE} "${HDFS_DIR}/test-data"
+                        hadoop fs -copyFromLocal -f ${TEST_DATA_DIR} ${HDFS_DIR}
+                        bash populate_schema.sh ${NAMESPACE} "${HDFS_DIR}/${TEST_DATA_DIR}"
 POPULATE_SCHEMA
             '''
                 }
