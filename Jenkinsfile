@@ -254,7 +254,7 @@ def populateSchema() {
                 ssh -o StrictHostKeyChecking=no ${USER}@${EDGE_NODE} /bin/bash << POPULATE_SCHEMA
                         chmod +x populate_schema.sh
                         kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
-                        hadoop fs -copyFromLocal -f test-data ${DIRECTORY}
+                        hadoop fs -copyFromLocal -f test-data ${HDFS_DIR}
                         bash populate_schema.sh ${NAMESPACE} "${HDFS_DIR}/test-data"
 POPULATE_SCHEMA
             '''
