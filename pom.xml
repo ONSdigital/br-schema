@@ -37,10 +37,10 @@
                 <configuration>
                     <transformationSets>
                         <transformationSet>
-                            <dir>src/main/resources/hbase-indexer</dir>
+                            <dir>src/main/resources/hbase-indexer/unit</dir>
                             <stylesheet>src/main/resources/hbase-indexer/row-mapping-hbase-indexer.xsl</stylesheet>
                             <includes>*.xml</includes>
-                            <OutputDir>${project.build.directory}/generated-resources/hbase-indexer</OutputDir>
+                            <OutputDir>${project.build.directory}/generated-resources/hbase-indexer/unit</OutputDir>
                             <parameters>
                                 <parameter>
                                     <name>namespace</name>
@@ -55,7 +55,7 @@
                     </transformationSets>
                     <validationSets>
                         <validationSet>
-                            <dir>${project.build.directory}/generated-resources/hbase-indexer</dir>
+                            <dir>${project.build.directory}/generated-resources/hbase-indexer/unit</dir>
                             <systemId>src/test/resources/indexerconf.xsd</systemId>
                             <includes>*.xml</includes>
                         </validationSet>

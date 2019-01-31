@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml-stylesheet type="text/xsl" href="row-mapping-hbase-indexer.xsl"?>
+
+<indexer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns=""
+         xsi:noNamespaceSchemaLocation="../indexer-config.xsd">
+
+    <table_name>PAYE</table_name>
+    <unit_id>payeref</unit_id>
+    <parent_unit_id>ubrn</parent_unit_id>
+
+</indexer>

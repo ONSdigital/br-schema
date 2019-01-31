@@ -6,7 +6,6 @@
       <xs:element type="xs:string" name="table_name" />
       <xs:element type="xs:string" name="unit_id" />
       <xs:element type="xs:string" name="parent_unit_id" minOccurs="0"/>
-      <xs:element type="xs:string" name="idbr_id" minOccurs="0"/>
       <xs:element type="fieldType" name="field" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation>Specific unit type fields</xs:documentation>

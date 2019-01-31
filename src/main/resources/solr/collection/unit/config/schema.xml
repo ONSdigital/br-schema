@@ -6,9 +6,8 @@
         <field name="id" type="string" indexed="true" stored="true"/>
         <field name="parent_unit_id" type="string" indexed="true" stored="true"/>
         <field name="unit_id" type="string" indexed="true" stored="true"/>
-        <field name="idbr_id" type="string" indexed="true" stored="true"/>
+        <field name="unit_type" type="string" indexed="true" stored="true"/>
         <field name="name" type="string" indexed="true" stored="true"/>
-        <field name="trading_style" type="string" indexed="true" stored="true"/>
         <field name="address1" type="string" indexed="false" stored="true"/>
         <field name="address2" type="string" indexed="false" stored="true"/>
         <field name="address3" type="string" indexed="false" stored="true"/>
@@ -16,16 +15,13 @@
         <field name="address5" type="string" indexed="false" stored="true"/>
         <field name="postcode" type="string" indexed="true" stored="true"/>
         <field name="legal_status" type="string" indexed="true" stored="true"/>
-        <field name="sic" type="string" indexed="true" stored="true"/>
-        <field name="turnover" type="tint" indexed="true" stored="true"/>
-        <field name="paye_jobs" type="tint" indexed="true" stored="true"/>
+        <field name="trading_style" type="string" indexed="true" stored="true"/>
         <field name="text" type="text_en" indexed="true" stored="false" multiValued="true"/>
         <field name="address" type="text_en" indexed="true" stored="false" multiValued="true"/>
         <field name="_version_" type="long" indexed="true" stored="true" />
     </fields>
 
     <copyField source="unit_id" dest="text" />
-    <copyField source="idbr_id" dest="text" />
     <copyField source="name" dest="text" />
     <copyField source="trading_style" dest="text" />
     <copyField source="postcode" dest="text" />
@@ -35,6 +31,7 @@
     <copyField source="address4" dest="address" />
     <copyField source="address5" dest="address" />
     <copyField source="postcode" dest="address" />
+
 
     <uniqueKey>id</uniqueKey>
 

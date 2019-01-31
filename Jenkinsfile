@@ -41,9 +41,12 @@ pipeline {
 
         stage('Build') {
             agent { label "build.${agentMavenVersion}" }
+            environment{
+                NAMESPACE = 'br_dev_db'
+            }
             steps {
                 unstash name: 'Checkout'
-                sh "mvn generate-resources"
+                sh "mvn generate-resources -Dnamespace=${NAMESPACE}"
                 stash name: 'Generated'
             }
             post {
@@ -151,6 +154,37 @@ pipeline {
             }
         }
 
+
+        stage('Create Indexers: Dev'){
+            agent { label 'deploy.jenkins.slave' }
+            when {
+                branch "master"
+                // evaluate the when condition before entering this stage's agent, if any
+                beforeAgent true
+            }
+            environment{
+                DEPLOY_TO = 'dev'
+                USER = 'sbr-dev-ci'
+                COLLECTION= 'unit'
+                INDEXER_NAME = "br_dev_${COLLECTION}"
+                INDEX_NAME = "br_dev_${COLLECTION}_index"
+                DROP_INDEXER='true'
+            }
+            steps {
+                unstash name: 'Generated'
+                createIndexer()
+                milestone label: 'post create-indexers:dev', ordinal: 4
+            }
+            post {
+                success {
+                    colourText("info","Stage: ${env.STAGE_NAME} successful!")
+                }
+                failure {
+                    colourText("warn","Stage: ${env.STAGE_NAME} failed!")
+                }
+            }
+        }
+
         stage('Populate Schema: Dev'){
             agent { label 'deploy.jenkins.slave' }
             when {
@@ -169,7 +203,7 @@ pipeline {
             steps {
                 unstash name: 'Generated'
                 populateSchema()
-                milestone label: 'post populate-schema:dev', ordinal: 4
+                milestone label: 'post populate-schema:dev', ordinal: 5
             }
             post {
                 success {
@@ -212,12 +246,12 @@ def createSchema() {
     sshagent(credentials: ["br-$DEPLOY_TO-ci-ssh-key"]) {
         withCredentials([string(credentialsId: "dev-edgenode-1", variable: 'EDGE_NODE')]) {
             sh '''
-                scp -q -o StrictHostKeyChecking=no src/main/resources/hbase/create_schema.sh ${USER}@${EDGE_NODE}:create_schema.sh
+                scp -r -q -o StrictHostKeyChecking=no src/main/resources/hbase ${USER}@${EDGE_NODE}:
                 echo "Successfully copied create_schema.sh to HOME directory on ${EDGE_NODE}"
                 ssh -o StrictHostKeyChecking=no ${USER}@${EDGE_NODE} /bin/bash << CREATE_SCHEMA
-                        chmod +x create_schema.sh
+                        chmod +x hbase/create_schema.sh
                         kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
-                        bash create_schema.sh -n ${NAMESPACE} -d ${DROP_TABLES}
+                        bash hbase/create_schema.sh -n ${NAMESPACE} -d ${DROP_TABLES}
 CREATE_SCHEMA
             '''
         }
@@ -230,14 +264,32 @@ def createIndex() {
         withCredentials([string(credentialsId: "dev-edgenode-1", variable: 'EDGE_NODE'),
                          string(credentialsId: "dev-zookeeper-ensemble", variable: 'ZK_ENSEMBLE')]) {
             sh '''
-                scp -q -o StrictHostKeyChecking=no src/main/resources/solr/create_index.sh ${USER}@${EDGE_NODE}:create_index.sh
-                echo "Successfully copied create_schema.sh to HOME directory on ${EDGE_NODE}"
-                scp -r -q -o StrictHostKeyChecking=no src/main/resources/solr/collection/${COLLECTION} ${USER}@${EDGE_NODE}:${COLLECTION}/
-                echo "Successfully copied '${COLLECTION}' index config files to HOME directory on ${EDGE_NODE}"
+                scp -r -q -o StrictHostKeyChecking=no src/main/resources/solr ${USER}@${EDGE_NODE}:
+                echo "Successfully copied Solr index config files to HOME directory on ${EDGE_NODE}"
                 ssh -o StrictHostKeyChecking=no ${USER}@${EDGE_NODE} /bin/bash << CREATE_INDEX
-                        chmod +x create_index.sh
+                        chmod +x solr/create_index.sh
                         kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
-                        bash create_index.sh -z ${ZK_ENSEMBLE} -n ${INDEX_NAME} -f ${COLLECTION}/config/schema.xml -d ${DROP_INDEX}
+                        bash solr/create_index.sh -z ${ZK_ENSEMBLE} -n ${INDEX_NAME} -f solr/collection/${COLLECTION}/config/schema.xml -d ${DROP_INDEX}
+CREATE_INDEX
+            '''
+        }
+    }
+}
+
+def createIndexer() {
+    echo "Deploying to $DEPLOY_TO"
+    sshagent(credentials: ["br-$DEPLOY_TO-ci-ssh-key"]) {
+        withCredentials([string(credentialsId: "dev-edgenode-1", variable: 'EDGE_NODE'),
+                         string(credentialsId: "dev-zookeeper-ensemble", variable: 'ZK_ENSEMBLE')]) {
+            sh '''
+                scp -r -q -o StrictHostKeyChecking=no target/generated-resources/hbase-indexer ${USER}@${EDGE_NODE}:
+                echo "Successfully copied '${INDEXER}' indexer config files to HOME directory on ${EDGE_NODE}"
+                scp -q -o StrictHostKeyChecking=no src/main/resources/hbase-indexer/create_indexer.sh ${USER}@${EDGE_NODE}:hbase-indexer/create_indexer.sh
+                echo "Successfully copied create_indexer.sh to HOME directory on ${EDGE_NODE}"
+                ssh -o StrictHostKeyChecking=no ${USER}@${EDGE_NODE} /bin/bash << CREATE_INDEX
+                        chmod +x hbase-indexer/create_indexer.sh
+                        kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
+                        bash hbase-indexer/create_indexer.sh -z ${ZK_ENSEMBLE} -n ${INDEXER_NAME} -i ${INDEX_NAME} -c hbase-indexer/${COLLECTION} -d ${DROP_INDEXER}
 CREATE_INDEX
             '''
         }
