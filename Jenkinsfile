@@ -310,8 +310,7 @@ def populateSchema() {
                         kinit ${USER}@ONS.STATISTICS.GOV.UK -k -t ${USER}.keytab
                         hadoop fs -mkdir ${BR_ROOT_DIR}
                         hadoop fs -mkdir ${HDFS_DIR}
-                        hadoop fs -copyFromLocal -f ${TEST_DATA_DIR} ${HDFS_DIR}
-                        bash populate_schema.sh ${NAMESPACE} "${HDFS_DIR}/${TEST_DATA_DIR}"
+                        bash populate_schema.sh ${NAMESPACE} ${TEST_DATA_DIR} "${HDFS_DIR}"
 POPULATE_SCHEMA
             '''
                 }
